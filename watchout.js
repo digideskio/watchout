@@ -1,5 +1,5 @@
 (function(){
-  var Player, axes, createEnemies, gameBoard, gameOptions, gameStats, play, players, render, updateBestScore, updateScore,
+  var Player, axes, createEnemies, drag, gameBoard, gameOptions, gameStats, play, player, render, updateBestScore, updateScore,
     __bind
 
   __bind = function(fn, context){
@@ -9,11 +9,11 @@
   };
 
   gameOptions = {
-    width: 450,
-    height: 700,
+    width: window.innerWidth * .5,
+    height: window.innerHeight * .5,
     nEnemies: 10,
     enemySize: 10, //radius of one enemy
-    personSize: 4 //radius of player
+    playerSize: 4 //radius of player
   };
 
   axes = {
@@ -23,107 +23,14 @@
 
   gameBoard = d3.select('.container').append('svg:svg').attr('width', gameOptions.width).attr('height', gameOptions.height);
 
-  randomCircle = gameBoard.append('svg:circle').attr('r', 10).attr('fill', 'red').attr('cx', gameOptions.width/2).attr('cy', gameOptions.height/2);
+  drag = d3.behavior.drag();
+  drag.on('drag', function(){
+    player.attr({cx: d3.event.x, cy: d3.event.y });
+  });
 
-  Player = (function() {
-
-    Player.prototype.x = 0;
-
-    Player.prototype.y = 0;
-
-    Player.prototype.r = gameOptions.personSize;
-
-    Player.prototype.fill = 'blue';
-
-    function Player(gameOptions) {
-      this.setupDragging = __bind(this.setupDragging, this);
-      this.moveRelative = __bind(this.moveRelative, this);
-      this.moveAbsolute = __bind(this.moveAbsolute, this);
-      this.transform = __bind(this.transform, this);
-      this.setY = __bind(this.setY, this);
-      this.getY = __bind(this.getY, this);
-      this.setX = __bind(this.setX, this);
-      this.getX = __bind(this.getX, this);
-      this.render = __bind(this.render, this);      
-      this.gameOptions = gameOptions;
-    }
-
-    Player.prototype.render = function(to) {
-      this.el = to.append('svg:circle').attr('class', 'player').attr('fill', this.fill);
-      this.transform({
-        x: this.gameOptions.width * 0.5,
-        y: this.gameOptions.height * 0.5
-      });
-      this.setupDragging();
-      return this;
-    };
-
-    Player.prototype.getX = function() {
-      return this.x;
-    };
-
-    Player.prototype.setX = function(x) {
-      var maxX, minX;
-      minX = this.gameOptions.padding;
-      maxX = this.gameOptions.width - this.gameOptions.padding;
-      if (x <= minX) x = minX;
-      if (x >= maxX) x = maxX;
-      return this.x = x;
-    };
-
-    Player.prototype.getY = function() {
-      return this.y;
-    };
-
-    Player.prototype.setY = function(y) {
-      var maxY, minY;
-      minY = this.gameOptions.padding;
-      maxY = this.gameOptions.height - this.gameOptions.padding;
-      if (y <= minY) y = minY;
-      if (y >= maxY) y = maxY;
-      return this.y = y;
-    };
-
-    Player.prototype.transform = function(opts) {
-      this.angle = opts.angle || this.angle;
-      this.setX(opts.x || this.x);
-      this.setY(opts.y || this.y);
-      return this.el.attr('transform', ("rotate(" + this.angle + "," + (this.getX()) + "," + (this.getY()) + ") ") + ("translate(" + (this.getX()) + "," + (this.getY()) + ")"));
-    };
-
-    Player.prototype.moveAbsolute = function(x, y) {
-      return this.transform({
-        x: x,
-        y: y
-      });
-    };
-
-    Player.prototype.moveRelative = function(dx, dy) {
-      return this.transform({
-        x: this.getX() + dx,
-        y: this.getY() + dy,
-        angle: 360 * (Math.atan2(dy, dx) / (Math.PI * 2))
-      });
-    };
-
-    Player.prototype.setupDragging = function() {
-      var drag, dragMove,
-        _this = this;
-      dragMove = function() {
-        return _this.moveRelative(d3.event.dx, d3.event.dy);
-      };
-      drag = d3.behavior.drag().on('drag', dragMove);
-      return this.el.call(drag);
-    };
-
-    return Player;
-
-  })();
-
-
-  players = [];
-
-  players.push(new Player(gameOptions).render(gameBoard));
+  player = gameBoard.append('circle').attr('class', 'player')
+    .attr({cx: gameOptions.width / 2, cy: gameOptions.height / 2, fill: 'blue', r: gameOptions.playerSize})
+    .call(drag);
 
   tweenWithCollisionDetection = function(endData) { //TODO - where is endData coming from? 
       var endPos, enemy, startPos;//
@@ -174,7 +81,7 @@
         id: i,
         x: Math.random() * 100,
         y: Math.random() * 100
-      }
+      };
     });
   };
 
