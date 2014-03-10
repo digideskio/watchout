@@ -8,7 +8,6 @@ var gameOptions = {
   enemySize: 10, //radius of one enemy
   playerSize: 6 //radius of player
 };
-console.log(gameOptions);
 
 var axes = {
   x: d3.scale.linear().domain([0, 100]).range([0, gameOptions.width]), //TODO - fix so that no part of an enemy can be off the gameboard
@@ -16,6 +15,28 @@ var axes = {
 };
 
 var gameBoard = d3.select('body').append('svg').style({'width': gameOptions.width + 'px', 'height': gameOptions.height + 'px'}).attr('class', 'container');
+
+var createEnemies = function() {
+  return _.range(0, gameOptions.nEnemies).map(function(i) {
+    return {
+      id: i,
+      x: Math.random() * 100,
+      y: Math.random() * 100
+    };
+  });
+};
+
+var data = d3.range(10).map(function(d){ return {} });
+
+var shuffle = function(sel){
+  return sel.attr('transform', function(d){ //TODO - what do translate and transform mean? 
+    d.x = Math.random() * w;
+    d.y = Math.random() * h;
+    return 'translate(' + d.x + ',' + d.y + ')';
+  });
+}
+
+var enemies = gameBoard.selectAll('circle.enemy').data(data);
 
 drag = d3.behavior.drag();
 drag.on('drag', function(){
@@ -28,7 +49,7 @@ var player = gameBoard.append('circle').attr('class', 'player')
 
 var render = function(newEnemyPositions){
   //UPDATE- match up all selected elements with newEnemyPositions data, based on each enemy id
-  var enemies = gameBoard.selectAll('circle.enemy').data(newEnemyPositions, function(d) {
+  enemies.data(newEnemyPositions, function(d) {
     return d.id;
   });
 
@@ -44,7 +65,7 @@ var render = function(newEnemyPositions){
     };
     return function(t) {
       var enemyNextPos;
-      checkCollision(enemy, onCollision);
+      // checkCollision(enemy, onCollision);
       var enemyNextPos = {
         x: startPos.x + (endPos.x - startPos.x) * t,
         y: startPos.y + (endPos.y - startPos.y) * t
@@ -61,11 +82,11 @@ var render = function(newEnemyPositions){
     // console.log('separation ' + separation);
 
     if (separation < radiusSum){
-      onCollision();
+      return onCollision();
     }
   };
 
-  onCollision = function() {
+  var onCollision = function() {
     console.log('collision');
     // updateBestScore();
     // gameStats.score = 0;
@@ -87,52 +108,20 @@ var render = function(newEnemyPositions){
   return enemies.transition().duration(1000).attr('r', 10).transition().duration(1000).tween('custom', tweenWithCollisionDetection);
 };
 
-
-  //   enemies.transition().duration(500)
-  //   .delay(function(d){ return Math.random() * 1000 })
-  //   .tween('custom', function(d){
-  //     var enemy = d3.select(this);
-  //     return function(t){
-  //       enemy.attr('transform', 'translate(' + d.x + ',' + d.y + ')')
-  //     }
-  //     // var startPos = { x: d.x, y: d.y }
-  //     // var endPos = { x: Math.random() * gameOptions.width, y: Math.random() * gameOptions.height };
-  //     // return function(t){
-  //     //   d.x = startPos.x + (endPos.x - startPos.x) * t //what's the purpose of 't'?
-  //     //   d.y = startPos.y + (endPos.y - startPos.y) * t
-  //     //   enemy.attr('transform', 'translate(' + d.x + ',' + d.y + ')')
-  //     // }
-  // })
-  // .each('end', function(){ d3.select(this).call(enemyMove) }); //todo- don't get this line
-
-// function loop(sel){
-//   sel.transition()
-//     .duration(1000)
-//     .delay(function(d){ return Math.random() * 1000 })
-//     .tween('custom', function(d){
-//       var enemy = d3.select(this);
-//       var startPos = { x: d.x, y: d.y }
-//       var endPos = { x: Math.random() * w, y: Math.random() * h };
-//       return function(t){
-//         d.x = startPos.x + (endPos.x - startPos.x) * t
-//         d.y = startPos.y + (endPos.y - startPos.y) * t
-//         enemy.attr('transform', 'translate(' + d.x + ',' + d.y + ')')
-//       }
-//     })
-//   .each('end', function(){ d3.select(this).call(loop) });
-// };
-
-// loop(enemies);
-
-var createEnemies = function() {
-  return _.range(0, gameOptions.nEnemies).map(function(i) {
-    return {
-      id: i,
-      x: Math.random() * 100,
-      y: Math.random() * 100
-    };
+d3.timer(function(t){
+  var px = player.attr('cx');
+  var py = player.attr('cy');
+  var collision = false;
+  enemies.each(function(d, i){
+    var ex = d.x;
+    var ey = d.y;
+    var x = ex - px;
+    var y = ey - py;
+    var d = Math.sqrt(x * x + y * y);
+    if(d < playerSize + enemySize) collision = true;
   });
-};
+  console.log(collision);
+});
 
 var play = function() {
   var gameTurn, increaseScore;
