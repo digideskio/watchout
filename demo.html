@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title></title>
+    <style>
+      body{
+        margin: 0;
+      }
+      .player{
+        fill: red;
+      }
+      .player.collision{
+        stroke: red;
+        stroke-width: 100;
+      }
+      @-webkit-keyframes spin {
+        from {
+          -webkit-transform: rotate(0deg);
+        }
+
+        to {
+          -webkit-transform: rotate(360deg);
+        }
+      }
+      svg .css-rotation{
+        -webkit-animation-name: spin;
+        -webkit-animation-duration: 1s;
+        -webkit-animation-iteration-count: infinite;
+        -webkit-animation-timing-function:linear;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="scoreboard">
+    <div class="high">High score: <span>0</span></div>
+    <div class="current">Current score: <span>0</span></div>
+    <div class="collisions">Collisions: <span>0</span></div>
+
+    <script src="d3.js" charset="utf-8"></script>
+    <script>
+
+      var svg = d3.selectAll('body').append('svg').attr({ width: w, height: h });
+      var g = svg.append('g');
+
+      var w = window.innerWidth;
+      var h = window.innerHeight;
+
+      var gameOptions = {
+        enemySize: 10,
+        timeBtwMoves: 1000
+      };
+
+      var enemiesTransition = function(){
+        enemiesJoins
+          .transition()
+          .attr('cx', function(){ return Math.random() * w; })
+          .attr('cy', function(){ return Math.random() * h; })
+          .duration(1000)
+
+        setTimeout(enemiesTransition, gameOptions.timeBtwMoves);
+      };
+
+      //gives you an array of empty objects 
+      var enemiesData = d3.range(10).map(function(d){ return {} });
+
+      //join enemiesData to all circles with class enemy inside svg element 
+
+      var enemiesJoins = g.selectAll('circle.enemy').data(d3.range(10));
+      console.log(enemiesJoins);
+
+      enemiesJoins.enter().append('circle')
+        .attr({ 
+          'class': 'enemy', 
+          'r': gameOptions.enemySize, 
+          'fill': 'red'
+        })
+          .attr('cx', function(){ return Math.random() * w; })
+          .attr('cy', function(){ return Math.random() * h; });
+        // .call(randomLocation) //sk - why is this line not working? 
+
+      setTimeout(enemiesTransition, gameOptions.timeBtwMoves);
+
+              // .tween('move', function (d) {
+        //   var enemy = d3.select(this);
+
+        //   var startPos = { x: d.x, y: d.y };
+        //   var endPos = { x: Math.random() * w, y: Math.random() * h };
+
+        //   return function(t){
+        //     d.x = startPos.x + (endPos.x - startPos.x) * t; //sk - what does 't' mean? s
+        //     d.y = startPos.y + (endPos.y - startPos.y) * t;
+
+        //     enemy.attr('transform', ('translation(' + d.x + ',' + d.y + ')')
+        //   }
+        // })
+        // .duration(1000)
+//       function loop(sel){
+//   sel.transition()
+//     .duration(1000)
+//     .delay(function(d){ return Math.random() * 1000 })
+//     .tween('custom', function(d){
+//       var enemy = d3.select(this);
+//       var startPos = { x: d.x, y: d.y }
+//       var endPos = { x: Math.random() * w, y: Math.random() * h };
+//       return function(t){
+//         d.x = startPos.x + (endPos.x - startPos.x) * t
+//         d.y = startPos.y + (endPos.y - startPos.y) * t
+//         enemy.attr('transform', 'translate(' + d.x + ',' + d.y + ')')
+//       }
+//     })
+//   .each('end', function(){ d3.select(this).call(loop) });
+// };
+
+      // var randomLocation = function(coord){
+      //   coord === 'cx' ? return Math.random() * w : return Math.random * h;
+      // };
+
+
+    </script>
+  </body>

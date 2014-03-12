@@ -14,7 +14,10 @@ var axes = {
   y: d3.scale.linear().domain([0, 100]).range([0, gameOptions.height])
 };
 
-var gameBoard = d3.select('body').append('svg').style({'width': gameOptions.width + 'px', 'height': gameOptions.height + 'px'}).attr('class', 'container');
+var gameBoard = d3.select('body')
+.append('svg')
+.style({'width': gameOptions.width + 'px', 'height': gameOptions.height + 'px'})
+.attr('class', 'container');
 
 var createEnemies = function() {
   return _.range(0, gameOptions.nEnemies).map(function(i) {
@@ -43,14 +46,16 @@ drag.on('drag', function(){
   player.attr({cx: d3.event.x, cy: d3.event.y });
 });
 
-var player = gameBoard.append('circle').attr('class', 'player')
+var player = gameBoard
+  .append('circle')
+  .attr('class', 'player')
   .attr({cx: gameOptions.width / 2, cy: gameOptions.height / 2, fill: 'blue', r: gameOptions.playerSize})
   .call(drag);
 
 var render = function(newEnemyPositions){
   //UPDATE- match up all selected elements with newEnemyPositions data, based on each enemy id
   enemies.data(newEnemyPositions, function(d) {
-    return d.id;
+    return d.id;  
   });
 
   var tweenWithCollisionDetection = function(endData) {
