@@ -45,6 +45,7 @@ var svg = d3.select('svg').attr({width: w, height : h});
 var data = d3.range(10).map(function(d){ return {} });
 
 var enemies = svg.selectAll('circle.enemy').data(data);
+console.log(enemies);
 
 enemies.enter().append('g').attr('class', 'shuriken enemy')
   .call(shuffle)

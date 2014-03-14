@@ -29,23 +29,23 @@
         width: 800,
         height: 600,
         enemySize: 10,
+        nEnemies: 10,
         score: 0,
+        collisions: 0,
         bestScore: 5,
         timeBtwScoreTick: 500, //ms
         timeBtwMoves: 1000
       };
 
       //TODO - get axes to work
-      axes = {
+
+      //////Game Rendering
+
+      var axes = {
         x: d3.scale.linear().domain([0,100]).range([0,gameOptions.width]),
         y: d3.scale.linear().domain([0,100]).range([0,gameOptions.height])
       }
 
-      var playerOptions = {
-        playerSize: 10
-        // cx: function(){ return Math.random() * w; }
-        // cy: function(){ return Math.random() * h; }
-      };
 
       var container = d3.select('body').append('div')
         .style({ width: gameOptions.width*1.2 + 'px', height: gameOptions.height*1.2 + 'px' }).attr('class', 'container');
@@ -53,6 +53,14 @@
       var board = container.append('svg').attr({class: 'board', width: gameOptions.width, height: gameOptions.height });
 
       var g = board.append('g');
+
+
+      //////Player
+      var playerOptions = {
+        playerSize: 10
+        // cx: function(){ return Math.random() * w; }
+        // cy: function(){ return Math.random() * h; }
+      };
 
       var drag = d3.behavior.drag();
       drag.on('drag', function(){
@@ -69,6 +77,56 @@
       //               .attr({ r: 10, fill: 'green', cx: gameOptions.width/2 , cy: gameOptions.height/2 })
       //               .call(drag);
 
+
+      //////Enemies
+
+      var enemiesData = [];
+
+      var updateEnemies = function(){
+        enemiesData = [];
+
+        for(var i = 0; i < gameOptions.nEnemies; i++){
+          enemiesData.push({
+            id: i,
+            cx: Math.random() * gameOptions.width,
+            cy: Math.random() * gameOptions.height
+          });
+        }
+      }
+
+      var enemiesTransition = function(){
+        updateEnemies();
+
+        enemies.data(enemiesData);
+
+        enemies
+          .transition()
+          .attr('cx', function(d){ return d.cx; })
+          .attr('cy', function(d){ return d.cy; })
+          .duration(1000);
+
+        setTimeout(enemiesTransition, gameOptions.timeBtwMoves);
+      };
+
+      //join empty objects to all circles with class enemy inside board element 
+
+      updateEnemies();
+
+      var enemies = g.selectAll('circle.enemy').data(enemiesData);
+
+      enemies.enter()
+        .append('circle')
+        .data(enemiesData)
+        .attr({ 
+          'class': 'enemy', 
+          'r': gameOptions.enemySize, 
+          'fill': 'red'
+        })
+        .attr('cx', function(d){ console.log(d.cx); return d.cx; })
+        .attr('cy', function(d){ return d.cy; });
+        // .call(randomLocation) //sk - why is this line not working? 
+
+      ///////GamePlay
       var scoreTicker = function(){
         gameOptions.score++;
 
@@ -81,35 +139,26 @@
         setTimeout(scoreTicker, gameOptions.timeBtwScoreTick);
       };
 
-      var enemiesTransition = function(){
-        enemiesJoins
-          .transition()
-          .attr('cx', function(){ return Math.random() * gameOptions.width; })
-          .attr('cy', function(){ return Math.random() * gameOptions.height; })
-          .duration(1000);
+      var checkCollisions = function(){
+        // enemies.each(function(d){
+        //   var enemy = d3.select(this);
+        //   var xDistance = d.cx - player.cx;
+        //   // console.log(xDistance);
+        //   var yDistance = d.cy - player.cy;
+        //   var radiiLength = player.r + d.r;
+        //   // console.log(radiiLength);
 
-        setTimeout(enemiesTransition, gameOptions.timeBtwMoves);
-      };
-
-      //gives you an array of empty objects 
-      var enemiesData = d3.range(10).map(function(d){ return {} });
-
-      //join enemiesData to all circles with class enemy inside board element 
-
-      var enemiesJoins = g.selectAll('circle.enemy').data(d3.range(10));
-
-      enemiesJoins.enter().append('circle')
-        .attr({ 
-          'class': 'enemy', 
-          'r': gameOptions.enemySize, 
-          'fill': 'red'
-        })
-          .attr('cx', function(){ return Math.random() * gameOptions.width; })
-          .attr('cy', function(){ return Math.random() * gameOptions.height; });
-        // .call(randomLocation) //sk - why is this line not working? 
+        //   if( Math.sqrt(xDistance * xDistance + yDistance * yDistance) < radiiLength){
+        //     playerOptions.score = 0;
+        //     d3.select('.scoreboard .collisions span').text(gameOptions.collisions);
+        //   }
+        // });
+      }
 
       setTimeout(enemiesTransition, gameOptions.timeBtwMoves);
       setTimeout(scoreTicker, gameOptions.timeBtwScoreTick);
+
+      d3.timer(checkCollisions);
 
               // .tween('move', function (d) {
         //   var enemy = d3.select(this);
