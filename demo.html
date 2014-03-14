@@ -2,34 +2,17 @@
 <html>
   <head>
     <title></title>
-    <style>
-      body{
-        margin: 0;
-      }
-      .player{
-        fill: red;
-      }
-      .player.collision{
-        stroke: red;
-        stroke-width: 100;
-      }
-      @-webkit-keyframes spin {
-        from {
-          -webkit-transform: rotate(0deg);
-        }
-
-        to {
-          -webkit-transform: rotate(360deg);
-        }
-      }
-      svg .css-rotation{
-        -webkit-animation-name: spin;
-        -webkit-animation-duration: 1s;
-        -webkit-animation-iteration-count: infinite;
-        -webkit-animation-timing-function:linear;
-      }
-    </style>
   </head>
+  <style>
+    .container {
+      position: absolute;
+      top: 20%;
+      left: 20%;
+    }
+    .board {
+      width:100%; height:100%; position:absolute; top:0; left:0;
+    }
+  </style>
   <body>
     <div class="scoreboard">
     <div class="high">High score: <span>0</span></div>
@@ -39,23 +22,71 @@
     <script src="d3.js" charset="utf-8"></script>
     <script>
 
-      var svg = d3.selectAll('body').append('svg').attr({ width: w, height: h });
-      var g = svg.append('g');
-
       var w = window.innerWidth;
       var h = window.innerHeight;
 
       var gameOptions = {
+        width: 800,
+        height: 600,
         enemySize: 10,
+        score: 0,
+        bestScore: 5,
+        timeBtwScoreTick: 500, //ms
         timeBtwMoves: 1000
+      };
+
+      //TODO - get axes to work
+      axes = {
+        x: d3.scale.linear().domain([0,100]).range([0,gameOptions.width]),
+        y: d3.scale.linear().domain([0,100]).range([0,gameOptions.height])
+      }
+
+      var playerOptions = {
+        playerSize: 10
+        // cx: function(){ return Math.random() * w; }
+        // cy: function(){ return Math.random() * h; }
+      };
+
+      var container = d3.select('body').append('div')
+        .style({ width: gameOptions.width*1.2 + 'px', height: gameOptions.height*1.2 + 'px' }).attr('class', 'container');
+
+      var board = container.append('svg').attr({class: 'board', width: gameOptions.width, height: gameOptions.height });
+
+      var g = board.append('g');
+
+      var drag = d3.behavior.drag();
+      drag.on('drag', function(){
+        player.attr({cx: d3.event.x, cy: d3.event.y });
+      });
+
+      var player = board.append('circle')
+        .attr({ class: 'player', r: 10, fill: 'green', cx: gameOptions.width/2 , cy: gameOptions.height/2 })
+        .call(drag);
+
+      //TODO- Sean's way; can't get it to render player
+      // var player = board.select('.player')
+      //               .append('svg:circle')
+      //               .attr({ r: 10, fill: 'green', cx: gameOptions.width/2 , cy: gameOptions.height/2 })
+      //               .call(drag);
+
+      var scoreTicker = function(){
+        gameOptions.score++;
+
+        if(gameOptions.score > gameOptions.bestScore){
+          gameOptions.bestScore = gameOptions.score;
+        }
+        d3.select('.scoreboard .high span').text(gameOptions.bestScore);
+        d3.select('.scoreboard .current span').text(gameOptions.score);
+
+        setTimeout(scoreTicker, gameOptions.timeBtwScoreTick);
       };
 
       var enemiesTransition = function(){
         enemiesJoins
           .transition()
-          .attr('cx', function(){ return Math.random() * w; })
-          .attr('cy', function(){ return Math.random() * h; })
-          .duration(1000)
+          .attr('cx', function(){ return Math.random() * gameOptions.width; })
+          .attr('cy', function(){ return Math.random() * gameOptions.height; })
+          .duration(1000);
 
         setTimeout(enemiesTransition, gameOptions.timeBtwMoves);
       };
@@ -63,10 +94,9 @@
       //gives you an array of empty objects 
       var enemiesData = d3.range(10).map(function(d){ return {} });
 
-      //join enemiesData to all circles with class enemy inside svg element 
+      //join enemiesData to all circles with class enemy inside board element 
 
       var enemiesJoins = g.selectAll('circle.enemy').data(d3.range(10));
-      console.log(enemiesJoins);
 
       enemiesJoins.enter().append('circle')
         .attr({ 
@@ -74,11 +104,12 @@
           'r': gameOptions.enemySize, 
           'fill': 'red'
         })
-          .attr('cx', function(){ return Math.random() * w; })
-          .attr('cy', function(){ return Math.random() * h; });
+          .attr('cx', function(){ return Math.random() * gameOptions.width; })
+          .attr('cy', function(){ return Math.random() * gameOptions.height; });
         // .call(randomLocation) //sk - why is this line not working? 
 
       setTimeout(enemiesTransition, gameOptions.timeBtwMoves);
+      setTimeout(scoreTicker, gameOptions.timeBtwScoreTick);
 
               // .tween('move', function (d) {
         //   var enemy = d3.select(this);
